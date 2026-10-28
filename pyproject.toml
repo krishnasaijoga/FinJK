@@ -1,0 +1,11 @@
+[tool.ruff]
+extend-exclude = [
+    ".venv",
+    ".FinJK",
+    "venv",
+    "env",
+    "__pycache__",
+    ".pytest_cache",
+    "build",
+    "dist"
+]
