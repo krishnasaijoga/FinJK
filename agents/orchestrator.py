@@ -1,6 +1,7 @@
 import logging
 import os
 
+from typing import TypeVar
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from strands.multiagent import GraphBuilder
@@ -55,49 +56,48 @@ def create_analysis_graph():
 
     builder.add_edge("financial","valuation")
 
-    # required_nodes=[
-    #     "financial",
-    #     "news",
-    #     "risk",
-    #     "valuation"
-    # ]
-
-    # wait_for_all=all_dependencies_complete(required_nodes)
-
-    # for node in required_nodes:
-    #     builder.add_edge(
-    #         node,
-    #         "report writer",
-    #         condition=wait_for_all
-    #     )
-
     builder.set_max_node_executions(4)
 
     return builder.build()
 
 
+T = TypeVar("T", bound=BaseModel)
+
+
 def get_validated_output(
-        graph_result,
-        node_id:str,
-        expected_model:type[BaseModel]
-):
-    node=graph_result.results.get(node_id)
+    graph_result,
+    node_id: str,
+    expected_model: type[T],
+) -> T:
+    node = graph_result.results.get(node_id)
 
     if node is None:
-        raise ValueError(f"{node_id} did not produce a result")
+        raise ValueError(
+            f"{node_id} did not produce a result"
+        )
 
     if node.status != Status.COMPLETED:
-        raise RuntimeError(f"{node_id} did not complete successfully")
+        raise RuntimeError(
+            f"{node_id} did not complete successfully"
+        )
 
-    agent_result=node.result
+    agent_result = node.result
 
     if agent_result is None:
-        raise ValueError(f"{node_id} returned an empty result")
+        raise ValueError(
+            f"{node_id} returned an empty result"
+        )
 
-    output=getattr(agent_result,"structured_output",None)
+    output = getattr(
+        agent_result,
+        "structured_output",
+        None,
+    )
 
     if output is None:
-        raise ValueError(f"{node_id} returned no structured output")
+        raise ValueError(
+            f"{node_id} returned no structured output"
+        )
 
     return expected_model.model_validate(output)
 
@@ -121,6 +121,21 @@ def run_fundamental_analysis(ticker:str)->ReportWriterOutput:
     news_output=get_validated_output(graph_result,"news",NewsSentimentOutput)
     risk_output=get_validated_output(graph_result,"risk",RiskAnalysisOutput)
     valuation_output=get_validated_output(graph_result,"valuation",ValuationAnalysisOutput)
+
+    logger.info(
+        "FinancialDataAgent status: %s",
+        financial_output.data_status, # type: ignore
+    )
+
+    logger.info(
+        "ValuationAgent status: %s",
+        valuation_output.data_status, # type: ignore
+    )
+
+    logger.info(
+        "Completed Graph nodes: %s",
+        list(graph_result.results.keys()),
+    )
 
     outputs=[
         financial_output,

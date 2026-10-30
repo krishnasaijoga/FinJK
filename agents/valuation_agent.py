@@ -66,30 +66,52 @@ fairly valued, or overvalued using two approaches:
 1. Intrinsic valuation through Discounted Cash Flow.
 2. Relative valuation using comparable companies.
 
-
 FINANCIAL DATA DEPENDENCY:
 
-You receive financial analysis from FinancialDataAgent
-through the Graph workflow.
+You are a dependent node of FinancialDataAgent in
+the Strands Graph workflow.
+
+The Graph provides the original ticker request
+and the output of FinancialDataAgent.
 
 Before calling run_dcf_model:
 
-1. Identify the FinancialDataOutput in the input context.
-2. Verify its ticker matches the requested company.
-3. Read its financial metrics and data_status.
-4. Pass the financial metrics into run_dcf_model
-   using the financial_data argument.
-5. Do not invent or estimate missing financial values.
-6. Do not replace supplied financial metrics with
-   independent values unless a discrepancy is
-   explicitly identified and reported.
+1. Locate the FinancialDataAgent output.
 
-For peer valuation, invoke get_peer_multiples
-with selected, relevant peer tickers.
+2. Verify that:
+   - The ticker matches the requested ticker.
+   - data_status is true.
 
-If the financial data is missing, incomplete, or
-inconsistent, do not report a successful DCF.
+3. Extract these fields from FinancialDataAgent:
 
+   - operating_income
+   - cash_and_equivalents
+   - total_debt
+   - capital_expenditure
+
+4. Pass them to run_dcf_model using this structure:
+
+   financial_data = {
+       "ticker": requested_ticker,
+       "data_status": true,
+       "operating_income": operating_income,
+       "cash_and_equivalents": cash_and_equivalents,
+       "total_debt": total_debt,
+       "capital_expenditure": capital_expenditure
+   }
+
+5. Preserve the original numerical values.
+
+6. Do not invent missing metrics or replace them
+   with independently estimated values.
+
+7. If financial data is missing, incomplete, or
+   belongs to another ticker, do not call
+   run_dcf_model with fabricated inputs.
+
+8. If DCF cannot be completed, report the missing
+   information and continue with peer valuation
+   if sufficient peer data is available.
 
 INPUTS:
 You will receive a company stock ticker.
@@ -120,16 +142,20 @@ TOOLS:
    - Relative valuation assessment
    - Peer comparison summary
 
-EXECUTION RULES:
+1. Call run_dcf_model only when valid financial data
+   from FinancialDataAgent is available.
 
-1. Use run_dcf_model to obtain intrinsic valuation.
-2. Use get_peer_multiples to obtain relative valuation.
-3. Ensure both outputs correspond to the requested ticker.
-4. Compare the DCF estimate with the market price.
-5. Assess whether the company trades at a premium
-   or discount relative to its selected peers.
-6. Combine both findings into an overall valuation
-   assessment.
+2. Call get_peer_multiples with relevant peer tickers
+   when comparable companies can be identified.
+
+3. If either tool fails, do not invent its results.
+   Explain which valuation method is unavailable.
+
+4. Ensure successful results correspond to the
+   requested ticker.
+
+5. Combine the available evidence into an overall
+   valuation assessment.
 
 Do not repeat tool calls unnecessarily.
 
@@ -239,18 +265,42 @@ def create_valuation_analysis_agent()->Agent:
     )
 
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
-    agent=create_valuation_analysis_agent()
+    agent = create_valuation_analysis_agent()
+
+    financial_data = {
+        "ticker": "AAPL",
+        "data_status": True,
+        "operating_income": 100_000_000,
+        "cash_and_equivalents": 10_000_000,
+        "total_debt": 20_000_000,
+        "capital_expenditure": -15_000_000,
+    }
+
+    prompt = f"""
+    Analyze stock ticker AAPL.
+
+    FinancialDataAgent output:
+    {financial_data}
+
+    Use the FinancialDataAgent output as the
+    financial_data argument when calling run_dcf_model.
+
+    Return ValuationAnalysisOutput.
+    """
 
     try:
-        result=agent("Give Valuation analysis for ticker APPL.")
+        result = agent(prompt)
 
-        output=result.structured_output
+        output = result.structured_output
 
         if output is None:
-            raise ValueError("Agent returned no structured output")
+            raise ValueError(
+                "Agent returned no structured output"
+            )
 
         print(output.model_dump_json(indent=2))
 

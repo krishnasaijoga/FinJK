@@ -63,3 +63,15 @@ def mock_yahoo(mock_financial_data):
         ) as mock_get_stock,
     ):
         yield mock_statement, mock_get_stock
+
+
+@pytest.fixture
+def financial_agent_output():
+    return {
+        "ticker": "AAPL",
+        "data_status": True,
+        "operating_income": 100_000_000,
+        "cash_and_equivalents": 10_000_000,
+        "total_debt": 20_000_000,
+        "capital_expenditure": -15_000_000,
+    }
