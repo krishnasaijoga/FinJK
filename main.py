@@ -2,7 +2,6 @@ import logging
 
 from agents.orchestrator import run_fundamental_analysis
 
-
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO)
 

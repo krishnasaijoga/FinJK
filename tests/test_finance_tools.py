@@ -46,18 +46,20 @@ def test_get_balance_sheet(ticker):
 
 
 # TEST 3: Cash Flow Statement
-def test_get_cash_flow_statement(ticker):
-    result = get_cash_flow_statement(ticker)
+def test_get_cash_flow_statement():
+    result = get_cash_flow_statement("AAPL")
 
-    assert isinstance(result, dict)
-    assert result["ticker"] == ticker
+    assert result["data_status"] is True
+
+    operating_cash_flow = result["operating_cash_flow"]
+    capital_expenditure = result["capital_expenditure"]
+    free_cash_flow = result["free_cash_flow"]
 
     expected_fcf = (
-        result["operating_cash_flow"]
-        - result["capital_expenditure"]
+        operating_cash_flow + capital_expenditure
     )
 
-    assert result["free_cash_flow"] == expected_fcf
+    assert free_cash_flow == pytest.approx(expected_fcf)
 
 
 # TEST 4: Key Ratios

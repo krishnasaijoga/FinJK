@@ -1,22 +1,19 @@
 
 import asyncio
 import time
-from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-
+from strands.agent.agent_result import AgentResult
 from strands.multiagent.base import (
     MultiAgentBase,
     MultiAgentResult,
     NodeResult,
     Status,
 )
+from strands.telemetry.metrics import EventLoopMetrics
 
 from agents import orchestrator as orch
-
-from strands.agent.agent_result import AgentResult
-from strands.telemetry.metrics import EventLoopMetrics
 
 
 class FakeSpecialist(MultiAgentBase):
@@ -76,7 +73,7 @@ class FakeSpecialist(MultiAgentBase):
             structured_output=None
         )
 
-        mock_result=NodeResult(
+        NodeResult(
             result=agent_result,
             status=Status.COMPLETED
         )
@@ -235,7 +232,7 @@ def test_valuation_waits_for_financial(
 def test_valuation_receives_financial_context(
     runtime_setup,
 ):
-    events, agents = runtime_setup
+    _events, agents = runtime_setup
 
     execute_real_graph(agents)
 

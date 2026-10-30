@@ -1,6 +1,6 @@
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from pydantic import ValidationError
@@ -9,10 +9,9 @@ from strands.multiagent.base import Status
 from agents import orchestrator as orch
 from agents.financial_data_agent import FinancialDataOutput
 from agents.news_sentiment_agent import NewsSentimentOutput
+from agents.report_writer_agent import ReportWriterOutput
 from agents.risk_agent import RiskAnalysisOutput
 from agents.valuation_agent import ValuationAnalysisOutput
-from agents.report_writer_agent import ReportWriterOutput
-
 
 # --------------------------------------------------
 # FIXTURES

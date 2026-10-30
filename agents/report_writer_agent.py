@@ -1,18 +1,22 @@
+import json
 import logging
 import os
-import json
 from typing import Literal
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
-
 from strands import Agent
 from strands.models.openai import OpenAIModel
 
 from agents.financial_data_agent import FinancialDataOutput
 from agents.news_sentiment_agent import NewsSentimentOutput
 from agents.risk_agent import RiskAnalysisOutput
-from agents.valuation_agent import ValuationAnalysisOutput, DCFValuation, PeerValuation, ValuationMultiples
+from agents.valuation_agent import (
+    DCFValuation,
+    PeerValuation,
+    ValuationAnalysisOutput,
+    ValuationMultiples,
+)
 
 load_dotenv()  # reads GROQ_API_KEY from a .env file, if present
 

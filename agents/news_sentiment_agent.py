@@ -24,7 +24,7 @@ class NewsSentimentOutput(BaseModel):
         "BEARISH",
         "STRONGLY_BEARISH"
     ]
-    sentiment_score:float |None=Field(default=None,ge=-1.0,le=1.0)
+    sentiment_score:float |None=Field(default=None,ge=-1.0,le=1.0,description="Sentiment polarity score from -1 (negative) to +1 (positive)")
     articles_analysed:int=Field(ge=0,description="Number of news articles actually analyzed")
     key_positive_factors:list[str]
     key_negative_factors:list[str]

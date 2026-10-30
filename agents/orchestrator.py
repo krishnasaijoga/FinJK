@@ -1,24 +1,20 @@
 import logging
 import os
-from typing import Literal
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field
-from strands import Agent
-from strands.models.openai import OpenAIModel
-
+from pydantic import BaseModel
 from strands.multiagent import GraphBuilder
-from strands.multiagent.graph import GraphState
 from strands.multiagent.base import Status
+from strands.multiagent.graph import GraphState
 
-
-from agents.report_writer_agent import ReportWriterOutput
-from agents.financial_data_agent import create_financial_data_agent, FinancialDataOutput
-from agents.news_sentiment_agent import create_news_sentiment_agent, NewsSentimentOutput
-from agents.valuation_agent import create_valuation_analysis_agent, ValuationAnalysisOutput
-from agents.risk_agent import create_risk_analysis_agent, RiskAnalysisOutput
+from agents.financial_data_agent import FinancialDataOutput, create_financial_data_agent
+from agents.news_sentiment_agent import NewsSentimentOutput, create_news_sentiment_agent
 from agents.report_writer_agent import ReportWriterOutput, generate_investment_report
-
+from agents.risk_agent import RiskAnalysisOutput, create_risk_analysis_agent
+from agents.valuation_agent import (
+    ValuationAnalysisOutput,
+    create_valuation_analysis_agent,
+)
 
 load_dotenv()  # reads GROQ_API_KEY from a .env file, if present
 

@@ -1,85 +1,113 @@
 from strands import tool
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+from providers.news_provider import fetch_company_news
 
 
 @tool
-def search_recent_news(ticker:str)->dict:
+def search_recent_news(ticker:str, company_name:str="", days:int=5)->dict:
     """Retrieve news articles about a company
     
     Args:
         ticker: ticker symbol for a company whose stock analysis query is searching. Eg:NVDA, APPL.
+        company_name: Full company name for accurate search.
+        days: Lookback period.
         
     Returns:
         Dictionary containing company news articles"""
+    ticker = ticker.strip().upper()
 
-    mock_news={
-        "APPL":[
-            {
-                "id":1,
-                "headline":"APPL shows strong Q3 revenue growth",
-                "source":"News Today",
-                "date":"2026-10-26",
-                "summary":"APPL reports strong demand for AI chips."
-            },
-            {
-                "id":2,
-                "headline":"APPL faces export restrictions",
-                "source":"Market News",
-                "date":"2026-10-21",
-                "summary":"New export restrictions could impact international sales."
-            },
-            {
-                "id": 3,
-                "headline": "APPL announces developer conference",
-                "source": "Technology News",
-                "date": "2026-10-22",
-                "summary": "APPL announces its upcoming developer event."
-            }
-        ]
-    }
-
-    articles=mock_news.get(ticker.upper(),[])
+    articles=fetch_company_news(
+        ticker=ticker,
+        company_name=company_name or None,
+        days=days
+    )
 
     return {
-        "ticker":ticker,
+        "ticker":ticker.strip().upper(),
         "articles_found":len(articles),
-        "news":articles
+        "news":articles,
+        "data_status":bool(articles),
+        "source":"GNews"
     }
 
 
 @tool
-def analyze_sentiment(ticker:str)->dict:
+def analyze_sentiment(articles:list[dict])->dict:
     """
     Return sentiment analysis for a company.
 
     Args:
-        ticker: ticker symbol for a company whose stock analysis query is searching. Eg:NVDA, APPL.
+        articles: Normalized articles with title and description fields.
 
     Returns:
         Dictionary containing sentiment results.
     """
-    mock_sentiment={
-        "APPL":{
-            "overall_sentiment":"Neutral",
-            "sentiment_score":0.05,
-            "positive_articles":1,
-            "negative_articels":1,
-            "neutral_articles":1,
-            "summary":"Strong AI demand is offset by potential export restrictions."
-        }
-    }
 
-    result=mock_sentiment.get(ticker.upper())
-    if result is None:
+    if not articles:
         return {
-            "ticker":ticker.upper(),
-            "status":"no_mock_data",
-            "overall_sentiment":None,
+            "overall_sentiment":"NEUTRAL",
             "sentiment_score":None,
-            "summary":"No mock sentiment data avaialble."
+            "articles_analysed":0,
+            "article_sentiments":[],
+            "data_status":False
         }
 
-    return {
-        "ticker":ticker.upper(),
-        "status":"success",
-        **result    # for unpacking dict
+    analyser=SentimentIntensityAnalyzer()
+
+    scores=[]
+    article_sentiments=[]
+
+    for article in articles:
+        text=" ".join(
+            filter(
+                None,
+                [
+                    article.get("title"),
+                    article.get("description")
+                ]
+            )
+        )
+
+        if not text.strip():
+            continue
+
+        score=analyser.polarity_scores(text)["compound"]
+        scores.append(score)
+
+        article_sentiments.append({
+            "title":article.get("title"),
+            "score":round(score,4)
+        })
+
+    if not scores:
+        return {
+            "overall_sentiment": "NEUTRAL",
+            "sentiment_score": None,
+            "articles_analysed": 0,
+            "article_sentiments":[],
+            "data_status": False
+        }
+
+    average=sum(scores)/len(scores)
+
+    if average>=0.5:
+        sentiment="STRONGLY_BULLISH"
+    elif average >= 0.05:
+        sentiment = "BULLISH"
+    elif average <= -0.5:
+        sentiment = "STRONGLY_BEARISH"
+    elif average <= -0.05:
+        sentiment = "BEARISH"
+    else:
+        sentiment = "NEUTRAL"
+
+    result={
+        "overall_sentiment":sentiment,
+        "sentiment_score":round(average,4),
+        "articles_analysed":len(scores),
+        "article_sentiments":article_sentiments,
+        "data_status":True
     }
+
+    return result

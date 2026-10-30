@@ -1,11 +1,12 @@
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from agents.report_writer_agent import (
+    ReportWriterOutput,
     create_report_writer_agent,
     generate_investment_report,
-    ReportWriterOutput,
 )
 
 
