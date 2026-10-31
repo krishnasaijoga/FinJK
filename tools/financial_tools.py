@@ -1,5 +1,10 @@
 from strands import tool
 
+from copy import deepcopy
+from threading import RLock
+
+from cachetools import TTLCache, cached
+
 from providers.yahoo_finance import get_metric, get_statement
 
 
@@ -80,19 +85,15 @@ def get_income_statement(ticker:str,period:str="annual")->dict:
 
     return result
 
+_balance_cache=TTLCache(maxsize=128,ttl=1800)
+_balance_lock=RLock()
 
-@tool
-def get_balance_sheet(ticker:str,period:str="annual")->dict:
-    """
-    Retrieve a company's balance sheet
-    
-    Args:
-        ticker: ticker symbol for a company whose stock analysis query is searching. Eg:NVDA, APPL.
-        period: annual or quarterly
 
-    Returns:
-        Dictionary containing company's balance sheet. Eg: {"ticker":"APPL","total_assets":3500000,"total_liabilities":2800000,"shareholders_equity":7000000,"cash_and_equivalents":5000000,"total_debt":1000000}
-    """
+@cached(cache=_balance_cache,lock=_balance_lock)
+def _get_balance_sheet_cached(
+    ticker:str,
+    period:str="annual"
+)->dict:
 
     data=get_statement(ticker,"balance",period)
     
@@ -159,6 +160,25 @@ def get_balance_sheet(ticker:str,period:str="annual")->dict:
     }
     
     return result
+
+
+@tool
+def get_balance_sheet(ticker:str,period:str="annual")->dict:
+    """
+    Retrieve a company's balance sheet
+    
+    Args:
+        ticker: ticker symbol for a company whose stock analysis query is searching. Eg:NVDA, APPL.
+        period: annual or quarterly
+
+    Returns:
+        Dictionary containing company's balance sheet. Eg: {"ticker":"APPL","total_assets":3500000,"total_liabilities":2800000,"shareholders_equity":7000000,"cash_and_equivalents":5000000,"total_debt":1000000}
+    """
+    result=_get_balance_sheet_cached(
+        ticker.strip().upper(),
+        period.strip().lower()
+    )
+    return deepcopy(result)
 
 
 @tool
@@ -239,17 +259,12 @@ def get_cash_flow_statement(ticker:str,period:str="annual")->dict:
     return result
 
 
-@tool
-def compute_key_ratios(ticker:str)->dict:
-    """
-    Computes company's key ratios
-    
-    Args:
-        ticker: ticker symbol for a company whose stock analysis query is searching. Eg:NVDA, APPL.
-        
-    Returns:
-        Dictionary containing company's computed key ratios. Eg: {"ticker":"APPL","ratios":{"net_profit_margin":0.2346,"return_on_equity":1.3751,"debt_to_equity":1.4267,"free_cash_flow_margin":0.2345}}
-    """
+_ratios_cache = TTLCache(maxsize=128, ttl=1800)
+_ratios_lock = RLock()
+
+
+@cached(cache=_ratios_cache,lock=_ratios_lock)
+def _compute_key_ratios_cached(ticker:str)->dict:
     ticker=ticker.upper()
 
     # later add cache
@@ -272,7 +287,7 @@ def compute_key_ratios(ticker:str)->dict:
 
     free_cash_flow_margin=free_cash_flow/revenue if revenue!=0 else None
 
-    mock_key_ratios={
+    key_ratios={
         "ticker":ticker,
         "ratios":{
             "net_profit_margin":net_profit_margin,  #later add _float_clean()
@@ -282,4 +297,19 @@ def compute_key_ratios(ticker:str)->dict:
         }
     }
 
-    return mock_key_ratios
+    return key_ratios
+
+
+@tool
+def compute_key_ratios(ticker:str)->dict:
+    """
+    Computes company's key ratios
+    
+    Args:
+        ticker: ticker symbol for a company whose stock analysis query is searching. Eg:NVDA, APPL.
+        
+    Returns:
+        Dictionary containing company's computed key ratios. Eg: {"ticker":"APPL","ratios":{"net_profit_margin":0.2346,"return_on_equity":1.3751,"debt_to_equity":1.4267,"free_cash_flow_margin":0.2345}}
+    """
+    result=_compute_key_ratios_cached(ticker.strip().upper())
+    return deepcopy(result)

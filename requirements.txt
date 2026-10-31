@@ -10,3 +10,4 @@ ruff>=0.16.7
 yfinance>=1.7.0
 requests>=2.34.2
 vaderSentiment>=3.3.2
+cachetools>=7.2.7

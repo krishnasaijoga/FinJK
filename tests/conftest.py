@@ -1,6 +1,37 @@
-
 import pytest
 from unittest.mock import patch, MagicMock
+
+
+from tools.financial_tools import (
+    _get_balance_sheet_cached,
+    _compute_key_ratios_cached,
+)
+
+from tools.news_tools import (
+    _search_recent_news_cached,
+)
+
+
+@pytest.fixture(autouse=True)
+def clear_shared_tool_caches():
+    """Isolate cached state between pytest tests."""
+
+    caches = [
+        _get_balance_sheet_cached,
+        _compute_key_ratios_cached,
+        _search_recent_news_cached,
+    ]
+
+    # Ensure each test starts with empty caches.
+    for cached_function in caches:
+        cached_function.cache_clear()
+
+    yield
+
+    # Prevent results leaking into subsequent tests.
+    for cached_function in caches:
+        cached_function.cache_clear()
+
 
 
 @pytest.fixture

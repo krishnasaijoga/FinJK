@@ -248,7 +248,8 @@ def create_valuation_analysis_agent()->Agent:
             model_id=MODEL_ID,
             # Groq reasoning models stream their thinking by default; hide it so only the answer prints.
             params={"extra_body": {"include_reasoning": False},
-                    "max_tokens":4000
+            "max_tokens":4000,
+            "parallel_tool_calls":False
         }
     )
 

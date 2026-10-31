@@ -42,13 +42,13 @@ def test_search_news_success(mock_news_response):
 
         result = search_recent_news(
             ticker="AAPL",
-            company_name="Apple",
+            company_name="apple",
             days=5,
         )
 
     mock_fetch.assert_called_once_with(
         ticker="AAPL",
-        company_name="Apple",
+        company_name="apple",
         days=5,
     )
 

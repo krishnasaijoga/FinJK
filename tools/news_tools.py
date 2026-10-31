@@ -1,20 +1,20 @@
+from copy import deepcopy
+from threading import RLock
+
+from cachetools import TTLCache, cached
+
 from strands import tool
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from providers.news_provider import fetch_company_news
 
 
-@tool
-def search_recent_news(ticker:str, company_name:str="", days:int=5)->dict:
-    """Retrieve news articles about a company
-    
-    Args:
-        ticker: ticker symbol for a company whose stock analysis query is searching. Eg:NVDA, APPL.
-        company_name: Full company name for accurate search.
-        days: Lookback period.
-        
-    Returns:
-        Dictionary containing company news articles"""
+_news_cache=TTLCache(maxsize=128,ttl=600)
+_news_lock=RLock()
+
+
+@cached(cache=_news_cache,lock=_news_lock)
+def _search_recent_news_cached(ticker:str, company_name:str="", days:int=5)->dict:
     ticker = ticker.strip().upper()
 
     articles=fetch_company_news(
@@ -30,6 +30,25 @@ def search_recent_news(ticker:str, company_name:str="", days:int=5)->dict:
         "data_status":bool(articles),
         "source":"GNews"
     }
+
+
+@tool
+def search_recent_news(ticker:str, company_name:str="", days:int=5)->dict:
+    """Retrieve news articles about a company
+    
+    Args:
+        ticker: ticker symbol for a company whose stock analysis query is searching. Eg:NVDA, APPL.
+        company_name: Full company name for accurate search.
+        days: Lookback period.
+        
+    Returns:
+        Dictionary containing company news articles"""
+    result=_search_recent_news_cached(
+        ticker.strip().upper(),
+        company_name.strip().lower(),
+        days
+    )
+    return deepcopy(result)
 
 
 @tool

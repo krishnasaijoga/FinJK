@@ -13,6 +13,9 @@ from agents.report_writer_agent import ReportWriterOutput
 from agents.risk_agent import RiskAnalysisOutput
 from agents.valuation_agent import ValuationAnalysisOutput
 
+from agents.orchestrator import get_validated_output
+
+
 # --------------------------------------------------
 # FIXTURES
 # --------------------------------------------------
@@ -219,38 +222,6 @@ def test_failed_node_raises_error(graph_result):
             RiskAnalysisOutput,
         )
 
-
-def test_missing_structured_output(graph_result):
-    graph_result.results[
-        "valuation"
-    ].result.structured_output = None
-
-    with pytest.raises(
-        ValueError, match="no structured output"
-    ):
-        orch.get_validated_output(
-            graph_result,
-            "valuation",
-            ValuationAnalysisOutput,
-        )
-
-
-def test_invalid_structured_output(graph_result):
-    graph_result.results[
-        "news"
-    ].result.structured_output = {
-        "ticker": "APPL",
-        "articles_analysed": "not-an-integer",
-    }
-
-    with pytest.raises(ValidationError):
-        orch.get_validated_output(
-            graph_result,
-            "news",
-            NewsSentimentOutput,
-        )
-
-
 # --------------------------------------------------
 # UNIT TESTS: ORCHESTRATOR FAILURES
 # --------------------------------------------------
@@ -403,5 +374,84 @@ def test_failed_specialist_blocks_report(
 
         with pytest.raises(RuntimeError):
             orch.run_fundamental_analysis("APPL")
+
+        report_writer.assert_not_called()
+
+
+
+def test_failed_specialist_node(graph_result):
+    graph_result.results["financial"].status = Status.FAILED
+
+    with pytest.raises(
+        RuntimeError,
+        match="financial did not complete successfully",
+    ):
+        get_validated_output(
+            graph_result,
+            "financial",
+            FinancialDataOutput,
+        )
+
+
+def test_missing_structured_output(graph_result):
+    graph_result.results[
+        "financial"
+    ].result.structured_output = None
+
+    with pytest.raises(
+        ValueError,
+        match="financial returned no structured output",
+    ):
+        get_validated_output(
+            graph_result,
+            "financial",
+            FinancialDataOutput,
+        )
+
+
+def test_invalid_structured_output(graph_result):
+    graph_result.results[
+        "financial"
+    ].result.structured_output = {
+        "ticker": None,
+        "data_status": "not-a-boolean",
+    }
+
+    with pytest.raises(ValidationError):
+        get_validated_output(
+            graph_result,
+            "financial",
+            FinancialDataOutput,
+        )
+
+
+def test_missing_specialist_node(graph_result):
+    del graph_result.results["financial"]
+
+    with pytest.raises(
+        ValueError,
+        match="financial did not produce a result",
+    ):
+        get_validated_output(
+            graph_result,
+            "financial",
+            FinancialDataOutput,
+        )
+
+
+def test_graph_failure_stops_report_generation():
+    from types import SimpleNamespace
+    from strands.multiagent.base import Status
+
+    failed_result = SimpleNamespace(status=Status.FAILED)
+
+    with (
+        patch.object(orch, "create_analysis_graph") as create_graph,
+        patch.object(orch, "generate_investment_report") as report_writer,
+    ):
+        create_graph.return_value.return_value = failed_result
+
+        with pytest.raises(RuntimeError, match="Graph execution failed"):
+            orch.run_fundamental_analysis("AAPL")
 
         report_writer.assert_not_called()

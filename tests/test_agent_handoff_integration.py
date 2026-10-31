@@ -64,7 +64,31 @@ def test_valuation_agent_passes_financial_data_to_dcf(
     """
 
     # This invokes Groq and the registered tools.
-    result = agent(prompt)
+    try:
+        result = agent(prompt)
+
+    except Exception as exc:
+        print("\n========== AGENT ERROR ==========")
+        print("Exception:", type(exc).__name__)
+        print("Message:", str(exc))
+
+        current = exc
+        while current is not None:
+            print("\nException type:", type(current).__name__)
+
+            response = getattr(current, "response", None)
+
+            if response is not None:
+                print("HTTP status:", getattr(response, "status_code", None))
+
+                try:
+                    print("API response:", response.json())
+                except Exception:
+                    print("API response text:", getattr(response, "text", ""))
+
+            current = current.__cause__
+
+        raise
 
     # Verify the tool was called.
     assert captured_dcf_calls, (
