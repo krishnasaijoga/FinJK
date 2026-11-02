@@ -28,3 +28,11 @@ dist/
 # OS files
 .DS_Store
 Thumbs.db
+
+invoke_finjk.py
+run_live_analysis.py
+test_sample.py
+test_valuation_live.py
+
+#images
+*.png
