@@ -3,7 +3,7 @@ import os
 from typing import Literal
 
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from strands import Agent
 from strands.models.openai import OpenAIModel
 
@@ -31,7 +31,7 @@ class ValuationMultiples(BaseModel):
 
 
 class PeerValuation(BaseModel):
-    peer_tickers: list[str]
+    peer_tickers: list[str]=Field(default_factory=list)
     company_multiples: ValuationMultiples
     peer_average_multiples: ValuationMultiples
     relative_valuation: str
@@ -159,6 +159,13 @@ TOOLS:
 
 Do not repeat tool calls unnecessarily.
 
+When calling get_peer_multiples:
+
+- Always provide peer_tickers as a JSON array.
+- Never pass null for peer_tickers.
+- Use an empty list [] when no peer tickers are available.
+- Do not invent comparable company tickers.
+
 VALUATION CLASSIFICATION:
 
 SIGNIFICANTLY UNDERVALUED:
@@ -235,6 +242,23 @@ classification, key findings, summary, and data status.
 The summary should explain whether the stock appears
 fairly priced, how it compares with peers, and any
 important uncertainties.
+
+STRUCTURED OUTPUT REQUIREMENTS:
+
+Return the final result using ValuationAnalysisOutput.
+
+Follow the Pydantic field types exactly.
+
+- peer_valuation must be a PeerValuation object or null.
+- peer_valuation.summary must always be a plain string.
+- peer_valuation.relative_valuation must always be a plain string.
+- peer_valuation.peer_tickers must always be a list of strings.
+- key_findings must always be a list of strings.
+- summary must always be a plain string.
+- Never return dictionaries or nested objects for string fields.
+- Never call tools named "json" or "commentary".
+- Use only the registered valuation tools and the
+  ValuationAnalysisOutput structured-output tool.
 """
 
 

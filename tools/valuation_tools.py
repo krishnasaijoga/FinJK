@@ -259,7 +259,7 @@ def get_company_multiples(ticker:str)->dict:
 
 
 @tool
-def get_peer_multiples(ticker:str,peer_tickers:list[str]|None=None)->dict:
+def get_peer_multiples(ticker:str,peer_tickers:list[str])->dict:
     """
     Compare a company's valuation multipes with peers.
 

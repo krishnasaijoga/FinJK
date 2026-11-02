@@ -15,7 +15,7 @@ logging.basicConfig(
 
 
 def main():
-    ticker = "INFY"
+    ticker = "AAPL"
 
     print(f"\nStarting live fundamental analysis: {ticker}")
 
