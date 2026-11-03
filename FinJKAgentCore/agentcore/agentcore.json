@@ -1,0 +1,15 @@
+{
+  "name": "FinJKAgentCore",
+  "version": 2,
+  "managedBy": "CDK",
+  "runtimes": [],
+  "memories": [],
+  "knowledgeBases": [],
+  "credentials": [],
+  "evaluators": [],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": [],
+  "configBundles": [],
+  "harnesses": []
+}

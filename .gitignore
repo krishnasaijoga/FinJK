@@ -1,38 +1,78 @@
-# Python cache
+
+# ==================================================
+# Python environments and caches
+# ==================================================
+.venv/
+.FinJK/
+venv/
+env/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
 
-# Virtual environments
-.venv/
-venv/
-.FinJK/
-
-# Environment variables and secrets
+# ==================================================
+# Secrets and local credentials
+# ==================================================
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
 
-# IDE settings
-.vscode/
+# AWS local credentials/configuration
+.aws/
 
-# Build artifacts
+# ==================================================
+# Python build artifacts
+# ==================================================
 build/
 dist/
 *.egg-info/
+*.whl
 
-# Logs
-*.log
+# ==================================================
+# AgentCore / AWS CDK generated artifacts
+# ==================================================
+**/cdk.out/
+**/node_modules/
+**/.cdk.staging/
+**/cdk.context.json
+**/agentcore/cdk/dist/
+**/agentcore/cdk/*.tsbuildinfo
+**/agentcore/aws-targets.json
+**/agentcore/agentcore.backup.json
 
-# OS files
+# ==================================================
+# Node.js local files
+# ==================================================
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==================================================
+# OS and editor files
+# ==================================================
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/
 
-invoke_finjk.py
-run_live_analysis.py
-test_sample.py
-test_valuation_live.py
+# ==================================================
+# Local output and temporary files
+# ==================================================
+*.log
+tmp/
+temp/
+outputs/
 
-#images
+
 *.png
